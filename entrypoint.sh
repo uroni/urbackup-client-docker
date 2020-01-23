@@ -15,6 +15,22 @@ setup() {
 		urbackupclientctl set-settings \
 			-k internet_server_proxy -v "$URBACKUP_SERVER_PROXY"
 	fi
+	
+	if [[ "$URBACKUP_CLIENT_MYSQL_BACKUP" == "1" ]]
+	then
+		cat << EOF > /usr/local/etc/urbackup/mariadbdump.conf
+#Enable MariaDB dump backup
+MARIADB_DUMP_ENABLED=1
+
+#Backup user account
+MARIADB_BACKUP_USER=$MYSQL_USER
+
+#Backup user password
+MARIADB_BACKUP_PASSWORD=$MYSQL_PASSWORD
+
+MARIADB_DUMP="mysqldump --host=$MYSQL_HOST"
+EOF
+	fi
 }
 
 setup &
