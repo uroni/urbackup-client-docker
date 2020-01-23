@@ -1,8 +1,35 @@
 #!/bin/bash
 set -e
 
+if [[ "$URBACKUP_SERVER_NAME" == "" ]]
+then
+	echo "Please specify UrBackup server DNS name/IP via environment variable URBACKUP_SERVER_NAME"
+	exit 1
+fi
+
+if [[ "$URBACKUP_CLIENT_NAME" == "" ]]
+then
+	echo "Please specify UrBackup client name via environment variable URBACKUP_CLIENT_NAME"
+	exit 1
+fi
+
+if [[ "$URBACKUP_CLIENT_AUTHKEY" == "" ]]
+then
+	echo "Please specify UrBackup client authentication key via environment variable URBACKUP_CLIENT_AUTHKEY"
+	exit 1
+fi
+
 setup() {
 	urbackupclientctl wait-for-backend
+	
+	IFS=':'
+	for dir in $URBACKUP_BACKUP_VOLUMES
+	do
+		echo "Backing up volume $dir"
+		urbackupclientctl add -d "$dir"
+	fi
+	unset IFS
+	
 	urbackupclientctl set-settings \
 		-k internet_mode_enabled -v true \
 		-k internet_server -v "$URBACKUP_SERVER_NAME" \
