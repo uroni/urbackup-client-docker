@@ -27,7 +27,7 @@ setup() {
 	do
 		echo "Backing up volume $dir"
 		urbackupclientctl add -d "$dir"
-	fi
+	done
 	unset IFS
 	
 	urbackupclientctl set-settings \
