@@ -9,5 +9,5 @@ docker build \
               --build-arg ARCH=${ARCH} \
               --build-arg VERSION=${VERSION} \
               --build-arg IMAGE_ARCH=$([ "${ARCH}" == "armhf" ] && echo "arm32v7/debian:buster" || ([ "${ARCH}" == "arm64" ] && echo "arm64v8/debian:buster") || ([ "${BUILD_ARCH}" == "i386" ] && echo "i386/debian:buster") || echo "debian:buster") \
-              -t urbackup-server:${VERSION}_${ARCH} \
+              -t urbackup-client:${VERSION}_${ARCH} \
               .
