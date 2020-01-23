@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+#Getting arch from docker tag instead of docker_path
+BUILD_ARCH=$(echo "${DOCKER_TAG}")
+
+if [[ $BUILD_ARCH == *"_"* ]]
+then
+    BUILD_ARCH=$(echo "$BUILD_ARCH" | cut -d_ -f2)
+else
+    BUILD_ARCH="amd64"
+fi
+
+[ "${BUILD_ARCH}" == "amd64" ] && \
+    { echo 'qemu-user-static: Registration not required for current arch'; exit 0; }
+
+docker run --rm --privileged multiarch/qemu-user-static:register --reset

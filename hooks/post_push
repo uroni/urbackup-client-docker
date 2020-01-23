@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -e
+
+echo "Creating multi-arch-manifest.yaml"
+
+BUILD_ARCH=${DOCKER_TAG}
+IMAGE_VER=${DOCKER_TAG}
+
+if [[ $BUILD_ARCH == *"_"* ]]
+then
+    BUILD_ARCH=$(echo "$BUILD_ARCH" | cut -d_ -f2)
+	IMAGE_VER=$(echo "$IMAGE_VER" | cut -d_ -f1)
+else
+    BUILD_ARCH="amd64"
+fi
+
+cat > multi-arch-manifest.yaml << EOF
+image: $(echo "${DOCKER_REPO}" | cut -d/ -f2,3):${IMAGE_VER} 
+manifests:
+  - image: $(echo "${DOCKER_REPO}" | cut -d/ -f2,3):${IMAGE_VER}_amd64
+    platform:
+      architecture: amd64
+      os: linux
+  - image: $(echo "${DOCKER_REPO}" | cut -d/ -f2,3):${IMAGE_VER}_i386
+    platform:
+      architecture: 386
+      os: linux
+  - image: $(echo "${DOCKER_REPO}" | cut -d/ -f2,3):${IMAGE_VER}_armhf
+    platform:
+      architecture: arm
+      os: linux
+  - image: $(echo "${DOCKER_REPO}" | cut -d/ -f2,3):${IMAGE_VER}_arm64
+    platform:
+      architecture: arm64
+      os: linux
+EOF
+echo "MANIFEST:"
+cat multi-arch-manifest.yaml
+curl -Lo manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+chmod +x manifest-tool
+
+./manifest-tool push from-spec multi-arch-manifest.yaml || true
