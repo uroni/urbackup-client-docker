@@ -8,9 +8,9 @@ Pulling the `:latest` tag should automatically grab the right image for your arc
 docker run -d \
                 --name urbackup-client \
                 -e TZ=Europe/Berlin \
-				-e URBACKUP_SERVER_NAME=example.com
-				-e URBACKUP_CLIENT_NAME=exampleclientname
-				-e URBACKUP_CLIENT_AUTHKEY=secretkey
+				-e URBACKUP_SERVER_NAME=example.com \
+				-e URBACKUP_CLIENT_NAME=exampleclientname \
+				-e URBACKUP_CLIENT_AUTHKEY=secretkey \
                 -v /path/to/backup:/backup \
                 uroni/urbackup-client:latest
 ```

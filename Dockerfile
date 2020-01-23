@@ -3,7 +3,7 @@ ARG IMAGE_ARCH=debian:buster
 FROM ${IMAGE_ARCH}
 
 ENV DEBIAN_FRONTEND=noninteractive
-ARG VERSION=2.4.12
+ARG VERSION=2.4.10
 ENV VERSION ${VERSION}
 ARG ARCH=amd64
 ARG QEMU_ARCH
@@ -19,16 +19,14 @@ ENV URBACKUP_CLIENT_AUTHKEY ""
 
 # Copy the entrypoint-script and the emulator needed for autobuild function of DockerHub
 COPY entrypoint.sh qemu-${QEMU_ARCH}-static* /usr/bin/
-ADD ${URL} /root/${FILE}
+ADD ${URL} /root/install.sh
 
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y wget lsb-base ca-certificates &&\
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y lsb-base ca-certificates &&\
     apt-get clean && rm -rf /var/lib/apt/lists/*
 	
-RUN TF=`mktemp` &&\
-        wget "https://hndl.urbackup.org/Client/2.4.9/UrBackup%20Client%20Linux%202.4.9.sh" -O $TF &&\
-        sh $TF &&\
-        rm -f $TF &&\
+RUN TF=sh /root/install.sh &&\
+        rm -f /root/install.sh &&\
 		mkdir -p /backup &&\        
         ( [ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient ) &&\
         ( [ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient ) &&\
