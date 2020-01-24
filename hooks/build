@@ -15,18 +15,11 @@ else
     BUILD_ARCH="amd64"
 fi
 
-FILE_SUBDIR="/"
-if [[ $BUILD_ARCH == "amd64" ]] || [[ $BUILD_ARCH == "i386" ]]
-then
-  FILE_SUBDIR="debian/buster/"
-fi
-
 echo "Build hook running"
 docker build \
              --file "${DOCKERFILE_PATH}"\
              --build-arg QEMU_ARCH=$([ "${BUILD_ARCH}" == "armhf" ] && echo "${BUILD_ARCH::-2}" || ([ "${BUILD_ARCH}" == "arm64" ] && echo "aarch64") || echo "0") \
              --build-arg IMAGE_ARCH=$([ "${BUILD_ARCH}" == "armhf" ] && echo "arm32v7/debian:buster" || ([ "${BUILD_ARCH}" == "arm64" ] && echo "arm64v8/debian:buster") || ([ "${BUILD_ARCH}" == "i386" ] && echo "i386/debian:buster") || echo "debian:buster") \
              --build-arg ARCH=${BUILD_ARCH} \
-             --build-arg FILE_SUBDIR=${FILE_SUBDIR} \
              --tag "${IMAGE_NAME}" \
              .
