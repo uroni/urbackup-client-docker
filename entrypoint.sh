@@ -19,6 +19,12 @@ then
 	exit 1
 fi
 
+if [[ "$URBACKUP_INTERNET_MODE" == "" ]]
+then
+	echo "Please specify UrBackup client mode (Internet/LAN) via environment variable URBACKUP_INTERNET_MODE (true/false)"
+	exit 1
+fi
+
 setup() {
 	urbackupclientctl wait-for-backend
 	
@@ -31,7 +37,7 @@ setup() {
 	unset IFS
 	
 	urbackupclientctl set-settings \
-		-k internet_mode_enabled -v true \
+		-k internet_mode_enabled -v "$URBACKUP_INTERNET_MODE" \
 		-k internet_server -v "$URBACKUP_SERVER_NAME" \
 		-k internet_server_port -v "$URBACKUP_SERVER_PORT" \
 		-k computername -v "$URBACKUP_CLIENT_NAME" \
