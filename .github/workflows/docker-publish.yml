@@ -38,4 +38,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/i386,linux/armhf
           push: true
-          tags: uroni/urbackup-server:${{ steps.extract_branch.outputs.branch }}
+          tags: uroni/urbackup-client:${{ steps.extract_branch.outputs.branch }}
