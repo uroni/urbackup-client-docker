@@ -55,7 +55,7 @@ MARIADB_BACKUP_USER=$MYSQL_USER
 #Backup user password
 MARIADB_BACKUP_PASSWORD=$MYSQL_PASSWORD
 
-MARIADB_DUMP="mysqldump --host=$MYSQL_HOST"
+MARIADB_DUMP="mysqldump --host=$MYSQL_HOST --no-tablespaces"
 EOF
 	fi
 }
