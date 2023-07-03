@@ -26,8 +26,10 @@ setup() {
 	for dir in $URBACKUP_BACKUP_VOLUMES
 	do
 		echo "Backing up volume $dir"
-		urbackupclientctl add -d "$dir"
-	done
+		if [ `urbackupclientctl list-backupdirs | tail  --lines=+3 | grep -q "$dir"` ]; then
+    			urbackupclientctl add -d "$dir" 
+		fi
+        done
 	unset IFS
 	
 	urbackupclientctl set-settings \
