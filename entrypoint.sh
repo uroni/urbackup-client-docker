@@ -25,9 +25,16 @@ setup() {
 	IFS=':'
 	for dir in $URBACKUP_BACKUP_VOLUMES
 	do
-		echo "Backing up volume $dir"
-		urbackupclientctl add -d "$dir"
-	done
+                if (  urbackupclientctl list-backupdirs | grep -q "No directories are being backed up" ) ; then
+                       echo "Backing up volume $dir"
+                       urbackupclientctl add -d "$dir"
+                else
+                        if ! ( urbackupclientctl list-backupdirs | tail  --lines=+3 | grep -q "$dir"  ); then
+                                echo "Backing up volume $dir"
+                                urbackupclientctl add -d "$dir"
+                        fi
+                fi
+        done
 	unset IFS
 	
 	urbackupclientctl set-settings \
