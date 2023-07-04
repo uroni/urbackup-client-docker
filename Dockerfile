@@ -1,9 +1,9 @@
 # Base image can be specified by --build-arg IMAGE_ARCH= ; defaults to debian:buster
-ARG IMAGE_ARCH=debian:buster
+ARG IMAGE_ARCH=debian:bookworm
 FROM ${IMAGE_ARCH}
 
 ENV DEBIAN_FRONTEND=noninteractive
-ARG VERSION=2.4.11
+ARG VERSION=2.5.24
 ENV VERSION ${VERSION}
 ARG ARCH=amd64
 ARG QEMU_ARCH
