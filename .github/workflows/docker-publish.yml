@@ -5,6 +5,7 @@ on:
     branches:
       - 'latest'
       - '2.4.x'
+      - '2.5.x'
   workflow_dispatch:
   
 jobs:
