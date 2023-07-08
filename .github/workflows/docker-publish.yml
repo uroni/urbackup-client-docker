@@ -10,7 +10,7 @@ on:
 
 env:
   PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
-  TARGET_IMAGE: "${{DOCKERHUB_USERNAME}}/urbackup-client"
+  TARGET_IMAGE: "${{env.DOCKERHUB_USERNAME}}/urbackup-client"
   
 jobs:
   docker:
