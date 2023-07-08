@@ -19,7 +19,7 @@ jobs:
       - 
         name: "Set environmental variables"
         run: |
-          echo "TARGET_IMAGE=${{env.DOCKERHUB_USERNAME}}/${TARGET_IMAGE_NAME}" >> $GITHUB_ENV
+          echo "TARGET_IMAGE=${{DOCKERHUB_USERNAME}}/${TARGET_IMAGE_NAME}" >> $GITHUB_ENV
           echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
 
       -  
