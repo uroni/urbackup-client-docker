@@ -10,7 +10,7 @@ on:
 
 env:
   PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
-  TARGET_IMAGE_NAME: "urbackup-client"
+  DOCKERHUB_REPO: "urbackup-client"
   
 jobs:
   docker:
@@ -19,9 +19,8 @@ jobs:
       - 
         name: "Set environmental variables"
         run: |
-          echo "TARGET_IMAGE=${{secrets.DOCKERHUB_USERNAME}}/${TARGET_IMAGE_NAME}" >> $GITHUB_ENV
+          echo "TARGET_IMAGE=${{secrets.DOCKERHUB_USERNAME}}/${DOCKERHUB_REPO}" >> $GITHUB_ENV
           echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
-
       -  
         name: Check value
         id: target
@@ -36,10 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          # list of Docker images to use as base name for tags
-          # images: ${{ env.GITHUB_ACTOR}}/${{ env.GITHUB_REF_NAME }}
           images:  "${{ env.TARGET_IMAGE }}"
-          # generate Docker tags based on the following events/attributes
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
