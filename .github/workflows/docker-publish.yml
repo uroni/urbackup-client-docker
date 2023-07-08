@@ -10,7 +10,7 @@ on:
 
 env:
   PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
-  TARGET_IMAGE: "${GITHUB_ACTOR}/urbackup-client"
+  TARGET_IMAGE: "${{ env.GITHUB_ACTOR }}/urbackup-client"
   
 jobs:
   environment-variables:
