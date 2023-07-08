@@ -10,7 +10,7 @@ on:
 
 env:
   PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
-  TARGET_IMAGE: "${{env.DOCKERHUB_USERNAME}}/urbackup-client"
+  TARGET_IMAGE_NAME: "urbackup-client"
   
 jobs:
   docker:
@@ -19,7 +19,7 @@ jobs:
       - 
         name: "Set environmental variables"
         run: |
-          echo "TARGET_IMAGE=${TARGET_IMAGE}" >> $GITHUB_ENV
+          echo "TARGET_IMAGE=${{env.DOCKERHUB_USERNAME}}/${TARGET_IMAGE_NAME}" >> $GITHUB_ENV
           echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
 
       -  
