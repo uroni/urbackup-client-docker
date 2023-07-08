@@ -14,6 +14,7 @@ docker run -d \
                 -v /path/to/backup:/backup \
                 uroni/urbackup-client:latest
 ```
+Latest stands for 2.5.x version. If you want to use 2.4.x version, use **uroni/urbackup-client:2.4.x** instead.
 
 ### Or via docker-compose (compatible with stacks in Portainer): 
 
@@ -33,23 +34,8 @@ services:
     volumes:
       - /path/to/backup:/backup  
 ```
-If you want to use 2.4.x version, use : 
-`docker-compose.yml`
-```
-version: '2'
+If you want to use 2.4.x version, use : **image:uroni/urbackup-client:2.4.x**
 
-services:
-  urbackup:
-    image: uroni/urbackup-client:2.4.x
-    container_name: urbackup-client
-    environment:
-      - TZ=Europe/Berlin # Enter your timezone
-	  - URBACKUP_SERVER_NAME=example.com
-	  - URBACKUP_CLIENT_NAME=exampleclientname
-	  - URBACKUP_CLIENT_AUTHKEY=secretkey
-    volumes:
-      - /path/to/backup:/backup  
-```
 	     
 ## Building locally
 Please use the provided `build.sh` script:
