@@ -10,7 +10,7 @@ on:
 
 env:
   PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
-#  TARGET_IMAGE: "${GITHUB_ACTOR}/${GITHUB_REF_NAME}"
+  TARGET_IMAGE: "${GITHUB_ACTOR}/urbackup-client"
   
 jobs:
   environment-variables:
@@ -34,12 +34,15 @@ jobs:
       - 
         name: "Set environmental variables"
         run: |
-          echo "TARGET_IMAGE=${GITHUB_REPOSITORY}" >> $GITHUB_ENV
+          echo "TARGET_IMAGE=${TARGET_IMAGE}" >> $GITHUB_ENV
+          echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
+
       -  
         name: Check value
         id: target
         run: |
           echo "${{ env.TARGET_IMAGE }}" 
+          echo "${{ env.PLATFORMS }}" 
       -
         name: Checkout
         uses: actions/checkout@v3
