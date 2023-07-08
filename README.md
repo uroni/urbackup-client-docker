@@ -23,7 +23,7 @@ version: '2'
 
 services:
   urbackup:
-    image: uroni/urbackup-client:latest
+    image: uroni/urbackup-client:2.5.X
     container_name: urbackup-client
     environment:
       - TZ=Europe/Berlin # Enter your timezone
