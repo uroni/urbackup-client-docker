@@ -23,7 +23,7 @@ version: '2'
 
 services:
   urbackup:
-    image: uroni/urbackup-client:2.5.X
+    image: uroni/urbackup-client:latest
     container_name: urbackup-client
     environment:
       - TZ=Europe/Berlin # Enter your timezone
@@ -32,7 +32,24 @@ services:
 	  - URBACKUP_CLIENT_AUTHKEY=secretkey
     volumes:
       - /path/to/backup:/backup  
-```              
+```
+If you want to use 2.4.x version, use : 
+`docker-compose.yml`
+```
+version: '2'
+
+services:
+  urbackup:
+    image: uroni/urbackup-client:2.4.x
+    container_name: urbackup-client
+    environment:
+      - TZ=Europe/Berlin # Enter your timezone
+	  - URBACKUP_SERVER_NAME=example.com
+	  - URBACKUP_CLIENT_NAME=exampleclientname
+	  - URBACKUP_CLIENT_AUTHKEY=secretkey
+    volumes:
+      - /path/to/backup:/backup  
+```
 	     
 ## Building locally
 Please use the provided `build.sh` script:
