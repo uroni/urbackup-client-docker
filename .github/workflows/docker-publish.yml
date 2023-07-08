@@ -72,7 +72,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: ${PLATFORMS}
+          platforms: ${{PLATFORMS}}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
