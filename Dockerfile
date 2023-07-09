@@ -35,3 +35,4 @@ RUN chmod +x /usr/bin/entrypoint.sh
 VOLUME [ "/backup" ]
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["--internet-only"]
+
