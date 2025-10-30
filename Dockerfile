@@ -16,7 +16,10 @@ ENV URBACKUP_BACKUP_VOLUMES=/backup
 # Copy the entrypoint-script and the emulator needed for autobuild function of DockerHub
 COPY entrypoint.sh qemu-${QEMU_ARCH}-static* /usr/bin/
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y lsb-base ca-certificates mariadb-client &&\
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    lsb-base  \
+    ca-certificates mariadb-client  \
+    curl &&\
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ADD ${URL} /root/install.sh
