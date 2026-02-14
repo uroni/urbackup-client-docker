@@ -115,7 +115,7 @@ jobs:
             Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}
             
             **Docker Images:**
-            - `${{ secrets.DOCKER_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
             - `ghcr.io/${{ github.repository }}:${{ steps.urbackup.outputs.version }}`
           draft: false
           prerelease: false
