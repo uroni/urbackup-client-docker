@@ -113,8 +113,8 @@ jobs:
             Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}client
             
             **Docker Images:**
-            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
-            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:latest`
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ steps.urbackup.outputs.version }}`
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest`
           draft: false
           prerelease: false
         env:
