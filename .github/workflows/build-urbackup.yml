@@ -18,12 +18,7 @@ jobs:
       - name: Get latest UrBackup release
         id: urbackup
         run: |
-          LATEST=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags" | \
-  jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name] |
-         map(gsub("client$";"")) |
-         sort_by(split(".") | map(tonumber)) |
-         reverse |
-         .[0]')
+          LATEST=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags" |   jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name] | map(gsub("client$";"")) | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
           echo "version=$LATEST" >> $GITHUB_OUTPUT
           echo "Latest UrBackup version: $LATEST"
       
