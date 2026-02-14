@@ -1,0 +1,45 @@
+name: Test Docker Push
+
+on:
+  workflow_dispatch:  # Déclenchement manuel uniquement
+
+jobs:
+  test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64  # Une seule plateforme pour aller vite
+          push: true
+          build-args: |
+            VERSION=2.5.29
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/urbackup:test-${{ github.run_number }}
+            ${{ secrets.DOCKER_USERNAME }}/urbackup:test-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Verify image on Docker Hub
+        run: |
+          echo "✅ Image successfully pushed to Docker Hub!"
+          echo "🐳 Image: ${{ secrets.DOCKER_USERNAME }}/urbackup:test-latest"
+          echo "🔗 View at: https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/urbackup/tags"
+      
+      - name: Test pull and run
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/urbackup:test-latest
+          echo "Image pulled successfully!"
