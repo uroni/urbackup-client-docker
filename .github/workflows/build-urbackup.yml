@@ -101,40 +101,21 @@ jobs:
           git commit -m "🚀 Update to UrBackup version ${{ steps.urbackup.outputs.version }}"
           git push
       
-      # - name: Create GitHub Release
-      #   if: steps.check.outputs.changed == 'true'
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ steps.urbackup.outputs.version }}
-      #     release_name: UrBackup ${{ steps.urbackup.outputs.version }}
-      #     body: |
-      #       Docker image built for UrBackup version ${{ steps.urbackup.outputs.version }}
+      - name: Create GitHub Release
+        if: steps.check.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.urbackup.outputs.version }}
+          name: UrBackup ${{ steps.urbackup.outputs.version }}
+          body: |
+            Docker image built for UrBackup version ${{ steps.urbackup.outputs.version }}
             
-      #       Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}
+            Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}client
             
-      #       **Docker Images:**
-      #       - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
-      #       - `ghcr.io/${{ github.repository }}:${{ steps.urbackup.outputs.version }}`
-      #     draft: false
-      #     prerelease: false
-
-- name: Create GitHub Release
-  if: steps.check.outputs.changed == 'true'
-  uses: softprops/action-gh-release@v1
-  with:
-    tag_name: ${{ steps.urbackup.outputs.version }}
-    name: UrBackup ${{ steps.urbackup.outputs.version }}
-    body: |
-      Docker image built for UrBackup version ${{ steps.urbackup.outputs.version }}
-      
-      Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}client
-      
-      **Docker Images:**
-      - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
-      - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:latest`
-    draft: false
-    prerelease: false
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+            **Docker Images:**
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:${{ steps.urbackup.outputs.version }}`
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup:latest`
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
