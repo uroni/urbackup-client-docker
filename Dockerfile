@@ -30,18 +30,45 @@ COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 
 # Download and install UrBackup Client
+# RUN FILE="UrBackup%20Client%20Linux%20${VERSION}.sh" && \
+#     URL="https://hndl.urbackup.org/Client/${VERSION}/${FILE}" && \
+#     echo "Downloading UrBackup ${VERSION} from ${URL}" && \
+#     curl -fSL "${URL}" -o /root/install.sh && \
+
+# RUN FILE="UrBackup%20Client%20Linux%20${VERSION}.sh" && \
+#     URL="https://hndl.urbackup.org/Client/${VERSION}/${FILE}" && \
+#     echo "Downloading UrBackup ${VERSION} from ${URL}" && \
+#     curl -fSL "${URL}" -o /tmp/install.sh && \
+#     # Neutraliser l'installation du module snapshot device-mapper
+#     sed -i 's/install.*dm_cremove_snapshot_common.*/true/' /tmp/install.sh && \
+#     sh -x /tmp/install.sh && \
+#     # rm -f /tmp/install.sh && \
+#     # Configure for internet-only mode
+#     ([ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient) && \
+#     ([ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient) && \
+#     # Create backup directory
+#     mkdir -p /backup
+
 RUN FILE="UrBackup%20Client%20Linux%20${VERSION}.sh" && \
     URL="https://hndl.urbackup.org/Client/${VERSION}/${FILE}" && \
     echo "Downloading UrBackup ${VERSION} from ${URL}" && \
-    curl -fSL "${URL}" -o /root/install.sh && \
-    sh /root/install.sh && \
-    rm -f /root/install.sh && \
+    curl -fSL "${URL}" -o /tmp/install.sh && \
+    # Extraire l'archive sans l'exécuter
+    mkdir -p /tmp/urbackup_install && \
+    cd /tmp/urbackup_install && \
+    sh /tmp/install.sh --noexec --target /tmp/urbackup_install && \
+    # Patcher le vrai script d'installation
+    sed -i '/dm_cremove_snapshot_common/d' /tmp/urbackup_install/install_client_linux.sh && \
+    # Désactiver les interactions avec /dev/tty
+    sed -i 's|/dev/tty|/dev/null|g' /tmp/urbackup_install/install_client_linux.sh && \
+    # Exécuter le script patché en mode non-interactif
+    cd /tmp/urbackup_install && sh ./install_client_linux.sh && \
+    rm -rf /tmp/urbackup_install /tmp/install.sh && \
     # Configure for internet-only mode
     ([ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient) && \
     ([ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient) && \
-    # Create backup directory
     mkdir -p /backup
-
+    
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD pgrep urbackupclientbackend || exit 1
