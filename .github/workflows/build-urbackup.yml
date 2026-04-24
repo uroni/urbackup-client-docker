@@ -111,12 +111,11 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         id: notes
         run: |
-          EXTRA=""
           if [ "${{ matrix.latest }}" = "true" ]; then
-            EXTRA="
-            - \`${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest\`"
+            echo "extra=- \`${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest\`" >> $GITHUB_OUTPUT
+          else
+            echo "extra=" >> $GITHUB_OUTPUT
           fi
-          echo "extra=$EXTRA" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         if: steps.check.outputs.changed == 'true'
@@ -131,7 +130,8 @@ jobs:
 
             **Docker Images:**
             - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ matrix.version }}`
-            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ matrix.branch }}`${{ steps.notes.outputs.extra }}
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ matrix.branch }}`
+            ${{ steps.notes.outputs.extra }}
           draft: false
           prerelease: false
         env:
