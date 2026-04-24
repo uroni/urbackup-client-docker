@@ -1,123 +1,61 @@
-name: Build UrBackup Docker Image
+name: Docker
 
 on:
-  schedule:
-    # Vérifie toutes les 6 heures
-    - cron: '0 */6 * * *'
+  # push:
+  #   branches:
+  #     - 'latest'
+  #     - '2.4.x'
+  #     - '2.5.x'
   workflow_dispatch:
-  push:
-    branches:
-      - 'latest'
-      - '2.4.x'
-      - '2.5.x'
-
-permissions:
-  contents: write
 
 env:
-  PLATFORMS: 'linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6'
-  DOCKERHUB_REPO: 'urbackup-client'
+  PLATFORMS: 'linux/amd64,linux/arm64,linux/i386,linux/armhf'
+  DOCKERHUB_REPO: "urbackup-client"
 
 jobs:
-  check-and-build:
+  docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Get latest UrBackup release
-        id: urbackup
+      - 
+        name: "Set environmental variables"
         run: |
-          LATEST=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags" \
-            | jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name] | map(gsub("client$";"")) | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
-          echo "version=$LATEST" >> $GITHUB_OUTPUT
-          echo "Latest UrBackup version: $LATEST"
-
-      - name: Check if already built
-        id: check
+          echo "TARGET_IMAGE=${{secrets.DOCKERHUB_USERNAME}}/${DOCKERHUB_REPO}" >> $GITHUB_ENV
+          echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
+      -  
+        name: Check value
+        id: target
         run: |
-          if [ -f "current_version.txt" ]; then
-            CURRENT=$(cat current_version.txt)
-            echo "current=$CURRENT" >> $GITHUB_OUTPUT
-          else
-            CURRENT="none"
-            echo "current=none" >> $GITHUB_OUTPUT
-          fi
-
-          echo "Current version: $CURRENT"
-          echo "Latest version: ${{ steps.urbackup.outputs.version }}"
-
-          if [ "${{ steps.urbackup.outputs.version }}" != "$CURRENT" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "✅ New version detected - will build"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No update needed"
-          fi
-
-      - name: Set up QEMU
-        if: steps.check.outputs.changed == 'true'
-        uses: docker/setup-qemu-action@v3.6.0
-
-      - name: Set up Docker Buildx
-        if: steps.check.outputs.changed == 'true'
-        uses: docker/setup-buildx-action@v3.10.0
-
-      - name: Login to DockerHub
-        if: steps.check.outputs.changed == 'true'
-        uses: docker/login-action@v3.4.0
+          echo "${{ env.TARGET_IMAGE }}" 
+          echo "${{ env.PLATFORMS }}" 
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      - 
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images:  "${{ env.TARGET_IMAGE }}"
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - 
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Docker meta
-        if: steps.check.outputs.changed == 'true'
-        id: meta
-        uses: docker/metadata-action@v5.7.0
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPO }}
-          tags: |
-            type=raw,value=${{ steps.urbackup.outputs.version }}
-            type=raw,value=latest
-            type=ref,event=branch
-
-      - name: Build and push Docker image
-        if: steps.check.outputs.changed == 'true'
-        uses: docker/build-push-action@v6.15.0
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: ${{ env.PLATFORMS }}
+          platforms: ${{env.PLATFORMS}}
           push: true
-          build-args: |
-            VERSION=${{ steps.urbackup.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Update version file
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          echo "${{ steps.urbackup.outputs.version }}" > current_version.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add current_version.txt
-          git commit -m "🚀 Update to UrBackup version ${{ steps.urbackup.outputs.version }}"
-          git push
-
-      - name: Create GitHub Release
-        if: steps.check.outputs.changed == 'true'
-        uses: softprops/action-gh-release@v2.3.2
-        with:
-          tag_name: ${{ steps.urbackup.outputs.version }}
-          name: UrBackup ${{ steps.urbackup.outputs.version }}
-          body: |
-            Docker image built for UrBackup version ${{ steps.urbackup.outputs.version }}
-
-            Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}client
-
-            **Docker Images:**
-            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ steps.urbackup.outputs.version }}`
-            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest`
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            VERSION=${{ env.URBACKUP_VERSION }}
