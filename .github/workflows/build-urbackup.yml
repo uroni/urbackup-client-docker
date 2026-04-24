@@ -6,7 +6,7 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch: # Permet déclenchement manuel
   push:
-    branches: [ main ]
+    branches: [ latest ]
 
 permissions:
   contents: write  # ← Ajouter ceci
