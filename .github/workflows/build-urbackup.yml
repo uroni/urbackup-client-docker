@@ -6,12 +6,14 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch: # Permet déclenchement manuel
   push:
-    branches: [ latest ]
+    branches:
+      - 'latest'
+      - '2.4.x'
+      - '2.5.x'
 
 permissions:
-  contents: write  # ← Ajouter ceci
-  # packages: write  # ← Si vous utilisez GHCR
-
+  contents: write  
+  
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -73,24 +75,32 @@ jobs:
       #     registry: ghcr.io
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
-      
+  
+      - name: Docker meta
+        if: steps.check.outputs.changed == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=raw,value=${{ steps.urbackup.outputs.version }}
+            type=raw,value=latest
+            type=ref,event=branch
+
+
       - name: Build and push Docker image
         if: steps.check.outputs.changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: ${{ env.PLATFORMS }}
           push: true
           build-args: |
             VERSION=${{ steps.urbackup.outputs.version }}
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ steps.urbackup.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest
-          #   ghcr.io/${{ github.repository }}:${{ steps.urbackup.outputs.version }}
-          #   ghcr.io/${{ github.repository }}:latest
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
-      
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+ 
+                  
       - name: Update version file
         if: steps.check.outputs.changed == 'true'
         run: |
@@ -100,7 +110,8 @@ jobs:
           git add current_version.txt
           git commit -m "🚀 Update to UrBackup version ${{ steps.urbackup.outputs.version }}"
           git push
-      
+
+          
       - name: Create GitHub Release
         if: steps.check.outputs.changed == 'true'
         uses: softprops/action-gh-release@v1
@@ -109,13 +120,14 @@ jobs:
           name: UrBackup ${{ steps.urbackup.outputs.version }}
           body: |
             Docker image built for UrBackup version ${{ steps.urbackup.outputs.version }}
-            
+ 
             Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ steps.urbackup.outputs.version }}client
-            
+ 
             **Docker Images:**
             - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ steps.urbackup.outputs.version }}`
             - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest`
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 

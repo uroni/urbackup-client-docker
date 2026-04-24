@@ -1,11 +1,11 @@
 name: Docker
 
 on:
-  push:
-    branches:
-      - 'latest'
-      - '2.4.x'
-      - '2.5.x'
+  # push:
+  #   branches:
+  #     - 'latest'
+  #     - '2.4.x'
+  #     - '2.5.x'
   workflow_dispatch:
 
 env:
