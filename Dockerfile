@@ -53,7 +53,7 @@ RUN chmod +x /usr/bin/entrypoint.sh
 #     mkdir -p /backup
 ADD ${URL} /root/install.sh
 
-RUN sh /root/install.sh --silent &&\
+RUN sh /root/install.sh --quiet &&\
         rm -f /root/install.sh &&\
 		mkdir -p /backup &&\        
         ( [ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient ) &&\
