@@ -13,7 +13,7 @@ RUN test -n "$VERSION" || (echo "ERROR: VERSION build arg is required" && exit 1
 ENV DEBIAN_FRONTEND=noninteractive \
     VERSION=${VERSION} \
     URBACKUP_SERVER_PORT=55415 \
-    URBACKUP_BACKUP_VOLUMES=/backup
+    URBACKUP_BACKUP_VOLUME=/backup
 
 ENV FILE=UrBackup%20Client%20Linux%20${VERSION}.sh
 ENV URL=https://hndl.urbackup.org/Client/${VERSION}/${FILE}
@@ -53,19 +53,19 @@ RUN chmod +x /usr/bin/entrypoint.sh
 #     mkdir -p /backup
 ADD ${URL} /root/install.sh
 
-RUN sh /root/install.sh --quiet &&\
+RUN cd /root && sh install.sh --quiet &&\
         rm -f /root/install.sh &&\
-		mkdir -p /backup &&\        
+		mkdir -p "${URBACKUP_BACKUP_VOLUME}" &&\        
         ( [ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient ) &&\
         ( [ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient ) &&\
-        mkdir -p /backup
+        mkdir -p "${URBACKUP_BACKUP_VOLUME}"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD pgrep urbackupclientbackend || exit 1
+    CMD urbackupclientctl status || exit 1
 
 # Volume for backups
-VOLUME ["/backup"]
+VOLUME ["${URBACKUP_BACKUP_VOLUME}"]
 
 # Labels for metadata
 LABEL org.opencontainers.image.source="https://github.com/uroni/urbackup_backend" \
