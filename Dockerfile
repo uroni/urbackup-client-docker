@@ -15,6 +15,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     URBACKUP_SERVER_PORT=55415 \
     URBACKUP_BACKUP_VOLUMES=/backup
 
+ENV FILE=UrBackup%20Client%20Linux%20${VERSION}.sh
+ENV URL=https://hndl.urbackup.org/Client/${VERSION}/${FILE}
+
 # Install dependencies in one layer and clean up
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
@@ -29,26 +32,34 @@ RUN apt-get update && \
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 
-RUN FILE="UrBackup%20Client%20Linux%20${VERSION}.sh" && \
-    URL="https://hndl.urbackup.org/Client/${VERSION}/${FILE}" && \
-    echo "Downloading UrBackup ${VERSION} from ${URL}" && \
-    curl -fSL "${URL}" -o /tmp/install.sh && \
-    # Extract without running
-    mkdir -p /tmp/urbackup_install && \
-    cd /tmp/urbackup_install && \
-    sh /tmp/install.sh --noexec --target /tmp/urbackup_install && \
-    # Patch the install script
-    sed -i '/dm_cremove_snapshot_common/d' /tmp/urbackup_install/install_client_linux.sh && \
-    # Remove interacts with /dev/tty
-    # sed -i 's|/dev/tty|/dev/null|g' /tmp/urbackup_install/install_client_linux.sh && \
-    # Run the patched script in non-interactive mode
-    cd /tmp/urbackup_install --silent && sh ./install_client_linux.sh && \
-    rm -rf /tmp/urbackup_install /tmp/install.sh && \
-    # Configure for internet-only mode
-    ([ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient) && \
-    ([ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient) && \
-    mkdir -p /backup
-    
+# RUN FILE="UrBackup%20Client%20Linux%20${VERSION}.sh" && \
+#     URL="https://hndl.urbackup.org/Client/${VERSION}/${FILE}" && \
+#     echo "Downloading UrBackup ${VERSION} from ${URL}" && \
+#     curl -fSL "${URL}" -o /tmp/install.sh && \
+#     # Extract without running
+#     mkdir -p /tmp/urbackup_install && \
+#     cd /tmp/urbackup_install && \
+#     sh /tmp/install.sh --noexec --target /tmp/urbackup_install && \
+#     # Patch the install script
+#     # sed -i '/dm_cremove_snapshot_common/d' /tmp/urbackup_install/install_client_linux.sh && \
+#     # Remove interacts with /dev/tty
+#     # sed -i 's|/dev/tty|/dev/null|g' /tmp/urbackup_install/install_client_linux.sh && \
+#     # Run the patched script in non-interactive mode
+#     cd /tmp/urbackup_install --silent && sh ./install_client_linux.sh && \
+#     rm -rf /tmp/urbackup_install /tmp/install.sh && \
+#     # Configure for internet-only mode
+#     ([ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient) && \
+#     ([ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient) && \
+#     mkdir -p /backup
+ADD ${URL} /root/install.sh
+
+RUN sh /root/install.sh --silent &&\
+        rm -f /root/install.sh &&\
+		mkdir -p /backup &&\        
+        ( [ ! -e /etc/default/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/default/urbackupclient ) &&\
+        ( [ ! -e /etc/sysconfig/urbackupclient ] || sed -i 's/INTERNET_ONLY=false/INTERNET_ONLY=true/' /etc/sysconfig/urbackupclient ) &&\
+        mkdir -p /backup
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD pgrep urbackupclientbackend || exit 1
