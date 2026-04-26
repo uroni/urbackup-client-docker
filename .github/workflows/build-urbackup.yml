@@ -1,0 +1,138 @@
+name: Build UrBackup Docker Image
+
+on:
+  schedule:
+    # Vérifie toutes les 6 heures
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - 'latest'
+      - '2.4.x'
+      - '2.5.x'
+
+permissions:
+  contents: write
+
+env:
+  PLATFORMS: 'linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6'
+  DOCKERHUB_REPO: 'urbackup-client'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # Job 1 : détecte les dernières versions 2.4.x et 2.5.x
+  detect-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - name: Detect latest 2.4.x and 2.5.x versions
+        id: versions
+        run: |
+          TAGS=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags?per_page=100" \
+            | jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name | gsub("client$";"")]')
+
+          V24=$(echo "$TAGS" | jq -r '[.[] | select(startswith("2.4."))] | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
+          V25=$(echo "$TAGS" | jq -r '[.[] | select(startswith("2.5."))] | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
+
+          echo "Latest 2.4.x: $V24"
+          echo "Latest 2.5.x: $V25"
+
+          MATRIX=$(jq -cn --arg v24 "$V24" --arg v25 "$V25" \
+            '{"include": [{"version": $v24, "branch": "2.4.x", "latest": "false"}, {"version": $v25, "branch": "2.5.x", "latest": "true"}]}')
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  # Job 2 : build en parallèle pour chaque version détectée
+  build:
+    needs: detect-versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-versions.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check if already built
+        id: check
+        run: |
+          VERSION="${{ matrix.version }}"
+          TAG_EXISTS=$(git ls-remote --tags origin "refs/tags/$VERSION" | wc -l)
+
+          echo "Checking version: $VERSION"
+
+          if [ "$TAG_EXISTS" -eq "0" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Tag $VERSION not found - will build"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Tag $VERSION already exists - no build needed"
+          fi
+
+      - name: Set up QEMU
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/setup-qemu-action@v3.6.0
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/setup-buildx-action@v3.10.0
+
+      - name: Login to DockerHub
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/login-action@v3.4.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta
+        if: steps.check.outputs.changed == 'true'
+        id: meta
+        uses: docker/metadata-action@v5.7.0
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=raw,value=${{ matrix.version }}
+            type=raw,value=${{ matrix.branch }}
+            type=raw,value=latest,enable=${{ matrix.latest }}
+
+      - name: Build and push Docker image
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/build-push-action@v6.15.0
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          build-args: |
+            VERSION=${{ matrix.version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build release notes
+        if: steps.check.outputs.changed == 'true'
+        id: notes
+        run: |
+          if [ "${{ matrix.latest }}" = "true" ]; then
+            echo "extra=- \`${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:latest\`" >> $GITHUB_OUTPUT
+          else
+            echo "extra=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2.3.2
+        with:
+          tag_name: ${{ matrix.version }}
+          name: UrBackup ${{ matrix.version }}
+          body: |
+            Docker image built for UrBackup version ${{ matrix.version }}
+
+            Upstream release: https://github.com/uroni/urbackup_backend/releases/tag/${{ matrix.version }}client
+
+            **Docker Images:**
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ matrix.version }}`
+            - `${{ secrets.DOCKERHUB_USERNAME }}/urbackup-client:${{ matrix.branch }}`
+            ${{ steps.notes.outputs.extra }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

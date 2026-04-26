@@ -1,2 +1,4 @@
 build.sh
 *~
+current_version.txt
+qemu-*-static

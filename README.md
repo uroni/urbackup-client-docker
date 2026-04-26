@@ -1,4 +1,4 @@
-## Multiarch (amd64/i386/armhf/arm64(aarch64)) docker images for UrBackup client.
+## Multiarch (amd64/i386/armhf/arm64) docker images for UrBackup client.
 Pulling the `:latest` tag should automatically grab the right image for your arch.
 
 ## Running
@@ -6,13 +6,13 @@ Pulling the `:latest` tag should automatically grab the right image for your arc
 ### If you want to use docker run command:
 ```
 docker run -d \
-                --name urbackup-client \
-                -e TZ=Europe/Berlin \
-				-e URBACKUP_SERVER_NAME=example.com \
-				-e URBACKUP_CLIENT_NAME=exampleclientname \
-				-e URBACKUP_CLIENT_AUTHKEY=secretkey \
-                -v /path/to/backup:/backup \
-                uroni/urbackup-client:latest
+           --name urbackup-client \
+           -e TZ=Europe/Berlin \
+           -e URBACKUP_SERVER_NAME=example.com \
+           -e URBACKUP_CLIENT_NAME=exampleclientname \
+           -e URBACKUP_CLIENT_AUTHKEY=secretkey \
+           -v /path/to/backup:/backup \
+           uroni/urbackup-client:latest
 ```
 Latest stands for 2.5.x version. If you want to use 2.4.x version, use **uroni/urbackup-client:2.4.x** instead.
 
@@ -20,8 +20,6 @@ Latest stands for 2.5.x version. If you want to use 2.4.x version, use **uroni/u
 
 `docker-compose.yml`
 ```
-version: '2'
-
 services:
   urbackup:
     image: uroni/urbackup-client:latest
