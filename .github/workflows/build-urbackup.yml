@@ -27,20 +27,36 @@ jobs:
       matrix: ${{ steps.versions.outputs.matrix }}
     steps:
       - name: Detect latest 2.4.x and 2.5.x versions
-        id: versions
-        run: |
-          TAGS=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags?per_page=100" \
-            | jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name | gsub("client$";"")]')
+              id: versions
+              run: |
+                # 1. Fetch ALL tags first (contains both 2.4.x and 2.5.x)
+                ALL_TAGS=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/tags?per_page=100" \
+                  | jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+client$")) | .name | gsub("client$";"")]')
 
-          V24=$(echo "$TAGS" | jq -r '[.[] | select(startswith("2.4."))] | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
-          V25=$(echo "$TAGS" | jq -r '[.[] | select(startswith("2.5."))] | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
+                # 2. Extract the latest 2.4.x version (No "Windows only" releases known for 2.4)
+                V24=$(echo "$ALL_TAGS" | jq -r '[.[] | select(startswith("2.4."))] | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
 
-          echo "Latest 2.4.x: $V24"
-          echo "Latest 2.5.x: $V25"
+                # 3. For 2.5.x, fetch the releases list to identify which ones are "Windows only"
+                WINDOWS_ONLY_25=$(curl -s "https://api.github.com/repos/uroni/urbackup_backend/releases?per_page=50" \
+                  | jq -r '[.[] | select(.name | test("windows"; "i")) | .tag_name | gsub("client$";"")]')
 
-          MATRIX=$(jq -cn --arg v24 "$V24" --arg v25 "$V25" \
-            '{"include": [{"version": $v24, "branch": "2.4.x", "latest": "false"}, {"version": $v25, "branch": "2.5.x", "latest": "true"}]}')
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+                # 4. Pick the latest 2.5.x from ALL_TAGS that is NOT included in the Windows-only blacklist
+                V25=$(echo "$ALL_TAGS" | jq -r --argjson win "$WINDOWS_ONLY_25" '
+                  [.[] | select(startswith("2.5.")) | select(. as $v | ($win | index($v) | not))] 
+                  | sort_by(split(".") | map(tonumber)) | reverse | .[0]')
+
+                echo "Latest 2.4.x found: $V24"
+                echo "Latest 2.5.x found (excluding Windows only): $V25"
+
+                # Safety check: Stop the workflow if any version is missing
+                if [ "$V24" = "null" ] || [ -z "$V24" ] || [ "$V25" = "null" ] || [ -z "$V25" ]; then
+                  echo "❌ Error: Failed to detect one of the two versions."
+                  exit 1
+                fi
+
+                MATRIX=$(jq -cn --arg v24 "$V24" --arg v25 "$V25" \
+                  '{"include": [{"version": $v24, "branch": "2.4.x", "latest": "false"}, {"version": $v25, "branch": "2.5.x", "latest": "true"}]}')
+                echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   # Job 2 : build en parallèle pour chaque version détectée
   build:
