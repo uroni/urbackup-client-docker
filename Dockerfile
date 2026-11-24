@@ -23,6 +23,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install --no-install-recommends -y \
         lsb-base \
+        lsb-release \
         ca-certificates \
         mariadb-client \
         curl && \
