@@ -78,11 +78,18 @@ jobs:
           echo "Checking version: $VERSION"
 
           if [ "$TAG_EXISTS" -eq "0" ]; then
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "✅ Tag $VERSION not found - will build"
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ Tag $VERSION already exists - no build needed"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "ℹ️ Tag $VERSION already exists - no build needed"
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "ℹ️ Tag $VERSION already exists - rebuilding image"
+            fi
           fi
 
       - name: Set up QEMU
@@ -118,13 +125,15 @@ jobs:
           context: .
           platforms: ${{ env.PLATFORMS }}
           push: true
+          pull: true
+          no-cache: true
           build-args: |
             VERSION=${{ matrix.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build release notes
-        if: steps.check.outputs.changed == 'true'
+        if: steps.check.outputs.changed == 'true' && steps.check.outputs.tag_exists == 'false'
         id: notes
         run: |
           if [ "${{ matrix.latest }}" = "true" ]; then
@@ -134,7 +143,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: steps.check.outputs.changed == 'true'
+        if: steps.check.outputs.changed == 'true' && steps.check.outputs.tag_exists == 'false'
         uses: softprops/action-gh-release@v2.3.2
         with:
           tag_name: ${{ matrix.version }}

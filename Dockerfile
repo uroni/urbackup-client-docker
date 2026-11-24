@@ -20,6 +20,7 @@ ENV URL=https://hndl.urbackup.org/Client/${VERSION}/${FILE}
 
 # Install dependencies in one layer and clean up
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install --no-install-recommends -y \
         lsb-base \
         ca-certificates \
