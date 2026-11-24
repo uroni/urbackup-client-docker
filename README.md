@@ -51,3 +51,14 @@ For example if you want to build an image for version 2.4.10 on armhf use the fo
 ```
 ./build.sh armhf 2.4.10
 ```
+
+To refresh the local image's base and Debian packages without using cached layers,
+build it with Docker directly, supplying the desired client version:
+```
+docker build --pull --no-cache --build-arg VERSION=2.5.29 -t urbackup-client:2.5.29 .
+```
+
+The publishing workflow rebuilds the current 2.4.x and 2.5.x images on pushes to
+the configured branches or when run manually from GitHub Actions. It pulls a
+fresh base image and builds without cached layers; existing GitHub releases are
+left unchanged.
